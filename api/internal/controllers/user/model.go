@@ -69,3 +69,40 @@ func (u User) GetAllUsers() ([]User, error) {
 
     return users, nil
 }
+
+func (u User) DeleteUser() error {
+    const query string = `
+        DELETE FROM users WHERE 
+            id=?
+            AND username=?
+            AND password=?;
+    `
+
+    // TODO: Fix connecting to db
+    db.ConnectDB()
+    defer db.DB.Close()
+
+    if _, err := db.DB.Exec(query, u.Id, u.Username, u.Password); err != nil {
+        return errors.New("User to be deleted not found.")
+    }
+
+    return nil
+}
+
+func (u User) EditUser() error {
+    const query string = `
+        UPDATE users
+        SET username = ?, password = ?
+        WHERE id = ?;
+    `
+
+    // TODO: Fix connecting to db
+    db.ConnectDB()
+    defer db.DB.Close()
+
+    if _, err := db.DB.Exec(query, u.Username, u.Password, u.Id); err != nil {
+        return errors.New("User to be edited not found.")
+    }
+
+    return nil
+}

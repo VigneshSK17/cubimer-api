@@ -2,10 +2,8 @@ package user
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 )
 
@@ -48,21 +46,21 @@ func ErrRender(err error) render.Renderer {
 
 type UsersResource struct{}
 
-func (rs UsersResource) Routes() chi.Router {
-    r := chi.NewRouter()
-    r.Use(UserCtx) // TODO: Make this open DB
-
-    r.Get("/", rs.List) // TODO: Restrict this to admin only
-    r.Post("/", rs.Create)
-
-    r.Route("/{username}", func(r chi.Router) {
-        r.Get("/", rs.Login) // Return user ID to access scrambles
-        r.Put("/", rs.Update)
-        r.Delete("/", rs.Delete)
-    })
-
-    return r
-}
+// func (rs UsersResource) Routes() chi.Router {
+//     r := chi.NewRouter()
+//     r.Use(UserCtx) // TODO: Make this open DB
+//
+//     r.Get("/", rs.List) // TODO: Restrict this to admin only
+//     r.Post("/", rs.Create)
+//
+//     r.Route("/{username}", func(r chi.Router) {
+//         r.Get("/", rs.Login) // Return user ID to access scrambles
+//         r.Put("/", rs.Update)
+//         r.Delete("/", rs.Delete)
+//     })
+//
+//     return r
+// }
 
 func UserCtx(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +75,7 @@ func (rs UsersResource) List(w http.ResponseWriter, r *http.Request) {
     users, err := testUser.GetAllUsers()
     if err != nil {
         render.Render(w, r, ErrRender(err))
+        return
     }
 
     render.Status(r, http.StatusCreated)
@@ -92,10 +91,10 @@ func (rs UsersResource) Create(w http.ResponseWriter, r *http.Request) {
         render.Render(w, r, ErrInvalidRequest(err))
         return
     }
-    fmt.Printf("%s %s\n", newUser.Username, newUser.Password)
 
     if err := newUser.InsertNewUser(); err != nil {
         render.Render(w, r, ErrRender(err))
+        return
     }
 
     render.Status(r, http.StatusCreated)
@@ -108,9 +107,34 @@ func (rs UsersResource) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rs UsersResource) Update(w http.ResponseWriter, r *http.Request) {
-    
+
+    var editedUser User 
+
+    if err := json.NewDecoder(r.Body).Decode(&editedUser); err != nil {
+        render.Render(w, r, ErrInvalidRequest(err))
+        return
+    }
+
+    if err := editedUser.EditUser(); err != nil {
+        render.Render(w, r, ErrRender(err))
+        return
+    }
 }
 
 func (rs UsersResource) Delete(w http.ResponseWriter, r *http.Request) {
     
+    var user User
+
+    if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+        render.Render(w, r, ErrInvalidRequest(err))
+        return
+    }
+
+    if err := user.DeleteUser(); err != nil {
+        render.Render(w, r, ErrRender(err))
+        return
+    }
+
+    render.Status(r, http.StatusNoContent)
+
 }
