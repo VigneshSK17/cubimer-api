@@ -13,28 +13,27 @@ import (
 
 func main() {
 
-    r := chi.NewRouter()
+	r := chi.NewRouter()
 
-    r.Use(middleware.Logger)
-    r.Use(render.SetContentType(render.ContentTypeJSON))
+	r.Use(middleware.Logger)
+	r.Use(render.SetContentType(render.ContentTypeJSON))
 
-    r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-        test_resp := map[string]string{"name": "Cubimer API"}
-        render.JSON(w, r, test_resp)
-    })
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		test_resp := map[string]string{"name": "Cubimer API"}
+		render.JSON(w, r, test_resp)
+	})
 
-    /** Users routes **/
+	/** Users routes **/
 
-    r.Route("/users", func (r chi.Router) {
-        r.Post("/", user.UsersResource{}.Create)
-        r.Get("/", user.UsersResource{}.List)
-        r.Delete("/", user.UsersResource{}.Delete)
-        r.Put("/", user.UsersResource{}.Update)
+	r.Route("/users", func(r chi.Router) {
+		r.Post("/", user.UsersResource{}.Create)
+		r.Patch("/", user.UsersResource{}.List)
+		r.Delete("/", user.UsersResource{}.Delete)
+		r.Put("/", user.UsersResource{}.Update)
 
-        // r.Get("/login")
-    })
+		r.Get("/", user.UsersResource{}.Login)
+	})
 
-
-    http.ListenAndServe("localhost:8080", r)
+	http.ListenAndServe("localhost:8080", r)
 
 }
