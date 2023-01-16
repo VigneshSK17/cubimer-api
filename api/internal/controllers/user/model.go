@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/VigneshSK17/cubimer-api/db"
@@ -28,6 +29,10 @@ func (u *User) Bind(r *http.Request) error {
 	return nil
 }
 
+func (u *User) GetTableName() string {
+	return fmt.Sprintf("%s%d", u.Username, u.Id)
+}
+
 func (u *User) InsertNewUser() error {
 	const query string = `
         INSERT INTO users (username, password)
@@ -35,7 +40,7 @@ func (u *User) InsertNewUser() error {
     `
 
 	// TODO: Fix connecting to db
-	db.ConnectDB()
+	db.ConnectUserDB()
 	defer db.DB.Close()
 
 	result, err := db.DB.Exec(query, u.Username, u.Password, u.Username)
@@ -60,7 +65,7 @@ func (u User) GetAllUsers() ([]User, error) {
 	users := []User{}
 
 	// TODO: Fix connecting to db
-	db.ConnectDB()
+	db.ConnectUserDB()
 	defer db.DB.Close()
 
 	if err := db.DB.Select(&users, query); err != nil {
@@ -79,7 +84,7 @@ func (u User) DeleteUser() error {
     `
 
 	// TODO: Fix connecting to db
-	db.ConnectDB()
+	db.ConnectUserDB()
 	defer db.DB.Close()
 
 	if _, err := db.DB.Exec(query, u.Id, u.Username, u.Password); err != nil {
@@ -97,7 +102,7 @@ func (u User) EditUser() error {
     `
 
 	// TODO: Fix connecting to db
-	db.ConnectDB()
+	db.ConnectUserDB()
 	defer db.DB.Close()
 
 	if _, err := db.DB.Exec(query, u.Username, u.Password, u.Id); err != nil {
@@ -115,18 +120,44 @@ func (u *User) CheckUser() error {
 		);
     `
 
-    var userId int64
+	var userId int64
 
 	// TODO: Fix connecting to db
-	db.ConnectDB()
+	db.ConnectUserDB()
 	defer db.DB.Close()
 
-    row := db.DB.QueryRow(query, u.Username, u.Password)
+	row := db.DB.QueryRow(query, u.Username, u.Password)
 
 	if err := row.Scan(&userId); err != nil {
 		return errors.New("Could not find user with given username and password.")
 	}
 
 	u.Id = userId
+	return nil
+}
+
+// Initializes new table of scrambles for user
+func (u *User) CreateScramblesTable() error {
+    queryStr := fmt.Sprintf(`
+        CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cube TEXT NOT NULL,
+            scrambleStr TEXT NOT NULL,
+            time INTEGER NOT NULL,
+            createdAt datetime NOT NULL,
+	        updatedAt datetime NOT NULL
+        );`, u.GetTableName())
+
+	// TODO: Fix connecting to db
+	db.ConnectScrambleDB()
+	defer db.DB.Close()
+
+	tableName := u.GetTableName()
+
+	if _, err := db.DB.Exec(queryStr, tableName); err != nil {
+		// return errors.New("A table for the user given could not be created");
+		return err
+	}
+
 	return nil
 }
