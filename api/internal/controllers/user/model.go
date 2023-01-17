@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/VigneshSK17/cubimer-api/db"
@@ -27,10 +26,6 @@ type User struct {
 
 func (u *User) Bind(r *http.Request) error {
 	return nil
-}
-
-func (u *User) GetTableName() string {
-	return fmt.Sprintf("%s%d", u.Username, u.Id)
 }
 
 func (u *User) InsertNewUser() error {
@@ -133,31 +128,5 @@ func (u *User) CheckUser() error {
 	}
 
 	u.Id = userId
-	return nil
-}
-
-// Initializes new table of scrambles for user
-func (u *User) CreateScramblesTable() error {
-    queryStr := fmt.Sprintf(`
-        CREATE TABLE %s (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            cube TEXT NOT NULL,
-            scrambleStr TEXT NOT NULL,
-            time INTEGER NOT NULL,
-            createdAt datetime NOT NULL,
-	        updatedAt datetime NOT NULL
-        );`, u.GetTableName())
-
-	// TODO: Fix connecting to db
-	db.ConnectScrambleDB()
-	defer db.DB.Close()
-
-	tableName := u.GetTableName()
-
-	if _, err := db.DB.Exec(queryStr, tableName); err != nil {
-		// return errors.New("A table for the user given could not be created");
-		return err
-	}
-
 	return nil
 }

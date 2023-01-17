@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/VigneshSK17/cubimer-api/api/internal/renderers"
 	"github.com/go-chi/render"
+
+    . "github.com/VigneshSK17/cubimer-api/api/internal/renderers"
 )
 
 type UsersResource struct{}
@@ -16,7 +17,7 @@ func (rs UsersResource) List(w http.ResponseWriter, r *http.Request) {
 
 	users, err := testUser.GetAllUsers()
 	if err != nil {
-		render.Render(w, r, renderers.ErrRender(err))
+		render.Render(w, r, ErrRender(err))
 		return
 	}
 
@@ -30,17 +31,17 @@ func (rs UsersResource) Create(w http.ResponseWriter, r *http.Request) {
 	var newUser User
 
 	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
-		render.Render(w, r, renderers.ErrInvalidRequest(err))
+		render.Render(w, r, ErrInvalidRequest(err))
 		return
 	}
 
 	if err := newUser.InsertNewUser(); err != nil {
-		render.Render(w, r, renderers.ErrRender(err))
+		render.Render(w, r, ErrRender(err))
 		return
 	}
 
     if err := newUser.CreateScramblesTable(); err != nil {
-		render.Render(w, r, renderers.ErrRender(err))
+		render.Render(w, r, ErrRender(err))
 		return
     }
 
@@ -54,12 +55,12 @@ func (rs UsersResource) Login(w http.ResponseWriter, r *http.Request) {
 	var user User
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		render.Render(w, r, renderers.ErrInvalidRequest(err))
+		render.Render(w, r, ErrInvalidRequest(err))
 		return
 	}
 
 	if err := user.CheckUser(); err != nil {
-		render.Render(w, r, renderers.ErrRender(err))
+		render.Render(w, r, ErrRender(err))
 		return
 	}
 
@@ -73,12 +74,12 @@ func (rs UsersResource) Update(w http.ResponseWriter, r *http.Request) {
 	var editedUser User
 
 	if err := json.NewDecoder(r.Body).Decode(&editedUser); err != nil {
-		render.Render(w, r, renderers.ErrInvalidRequest(err))
+		render.Render(w, r, ErrInvalidRequest(err))
 		return
 	}
 
 	if err := editedUser.EditUser(); err != nil {
-		render.Render(w, r, renderers.ErrRender(err))
+		render.Render(w, r, ErrRender(err))
 		return
 	}
 
@@ -91,15 +92,35 @@ func (rs UsersResource) Delete(w http.ResponseWriter, r *http.Request) {
 	var user User
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		render.Render(w, r, renderers.ErrInvalidRequest(err))
+		render.Render(w, r, ErrInvalidRequest(err))
 		return
 	}
 
 	if err := user.DeleteUser(); err != nil {
-		render.Render(w, r, renderers.ErrRender(err))
+		render.Render(w, r, ErrRender(err))
 		return
 	}
 
 	render.Status(r, http.StatusNoContent)
+
+}
+
+func (rs UsersResource) ListScrambles(w http.ResponseWriter, r *http.Request) {
+
+    var user User
+
+    if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+        render.Render(w, r, ErrInvalidRequest(err))
+        return
+    }
+
+    scrambles, err := user.GetAllScrambles()
+    if err != nil {
+        render.Render(w, r, ErrRender(err))
+        return
+    }
+
+    render.Status(r, http.StatusCreated)    
+    render.JSON(w, r, scrambles)
 
 }

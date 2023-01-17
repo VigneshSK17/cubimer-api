@@ -13,11 +13,11 @@ const (
 type Scramble struct {
     Id int64
     Cube CubeType
-    ScrambleStr string
+    ScrambleStr string `db:"scrambleStr"`
     Time int64 // milliseconds
-    CreatedAt time.Time
-    UpdatedAt time.Time
-
+    CreatedAt time.Time `db:"createdAt"`
+    UpdatedAt time.Time `db:"updatedAt"`
+}   
 
 func (s *Scramble) Bind(r *http.Request) error {
     return nil

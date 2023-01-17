@@ -32,7 +32,13 @@ func main() {
 		r.Put("/", user.UsersResource{}.Update)
 
 		r.Get("/", user.UsersResource{}.Login)
+
 	})
+
+    /** Scrambles routes **/
+    r.Route("/scrambles", func(r chi.Router) {
+        r.Get("/", user.UsersResource{}.ListScrambles)
+    })
 
 	http.ListenAndServe("localhost:8080", r)
 
