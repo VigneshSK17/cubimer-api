@@ -5,8 +5,8 @@ import (
 
 	"github.com/VigneshSK17/cubimer-api/api/internal/controllers/user"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/chi/v5" 
+    "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -38,6 +38,7 @@ func main() {
     /** Scrambles routes **/
     r.Route("/scrambles", func(r chi.Router) {
         r.Get("/", user.UsersResource{}.ListScrambles)
+        r.Post("/", user.UsersResource{}.SaveScramble)
     })
 
 	http.ListenAndServe("localhost:8080", r)

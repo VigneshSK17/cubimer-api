@@ -6,11 +6,10 @@ import (
 
 	"github.com/go-chi/render"
 
-    . "github.com/VigneshSK17/cubimer-api/api/internal/renderers"
+	. "github.com/VigneshSK17/cubimer-api/api/internal/renderers"
 )
 
 type UsersResource struct{}
-
 func (rs UsersResource) List(w http.ResponseWriter, r *http.Request) {
 
 	testUser := User{}
@@ -122,5 +121,25 @@ func (rs UsersResource) ListScrambles(w http.ResponseWriter, r *http.Request) {
 
     render.Status(r, http.StatusCreated)    
     render.JSON(w, r, scrambles)
+
+}
+
+func (rs UsersResource) SaveScramble(w http.ResponseWriter, r *http.Request) {
+
+    var newScramble NewScramble
+
+    if err := json.NewDecoder(r.Body).Decode(&newScramble); err != nil {
+        render.Render(w, r, ErrInvalidRequest(err))
+        return
+    }
+
+    scramble, err := newScramble.InsertScramble()
+    if err != nil {
+        render.Render(w, r, ErrRender(err))
+        return
+    }
+
+    render.Status(r, http.StatusCreated)
+    render.JSON(w, r, scramble)
 
 }

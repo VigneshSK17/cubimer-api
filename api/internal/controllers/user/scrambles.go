@@ -1,11 +1,27 @@
 package user
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
+	"time"
 
 	. "github.com/VigneshSK17/cubimer-api/api/internal/controllers/scramble"
 	"github.com/VigneshSK17/cubimer-api/db"
 )
+
+type NewScramble struct {
+    Id int64
+    Username string
+    Password string
+    Cube string
+    ScrambleStr string `json:"scrambleStr"`
+    Time int64
+}
+
+func (u *NewScramble) Bind(r *http.Request) error {
+	return nil
+}
 
 // Table name for a user
 func (u User) GetTableName() string {
@@ -57,4 +73,45 @@ func (u User) GetAllScrambles() ([]Scramble, error) {
 
     return scrambles, nil
 
+}
+
+func (s *NewScramble) InsertScramble() (Scramble, error) {
+
+    user := User{
+        Id: s.Id,
+        Username: s.Username,
+        Password: s.Password,
+    }
+    
+    query := fmt.Sprintf(`
+        INSERT INTO %s (cube, scrambleStr, time, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?);
+    `, user.GetTableName())
+
+	// TODO: Fix connecting to db
+	db.ConnectScrambleDB()
+	defer db.DB.Close()
+
+    now := time.Now()
+
+	result, err := db.DB.Exec(query, s.Cube, s.ScrambleStr, s.Time, now, now)
+	if err != nil {
+		return Scramble{}, errors.New("Could not create new scramble.")
+	}
+
+	var newId int64
+	if newId, err = result.LastInsertId(); err != nil {
+		return Scramble{}, errors.New("Count not find the newest scramble created. Please try again.")
+	}
+
+    scramble := Scramble{
+        Id: newId,
+        Cube: CubeType(s.Cube),
+        ScrambleStr: s.ScrambleStr,
+        Time: s.Time,
+        CreatedAt: now,
+        UpdatedAt: now,
+    }
+
+    return scramble, nil
 }
