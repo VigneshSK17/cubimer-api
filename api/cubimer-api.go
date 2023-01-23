@@ -39,9 +39,9 @@ func main() {
 
     r.Route("/scrambles", func(r chi.Router) {
         r.Get("/", user.UsersResource{}.ListScrambles)
-        // r.Get("/", user.UsersResource{}.DeleteScramble)
         r.Post("/", user.UsersResource{}.SaveScramble)
         r.Delete("/", user.UsersResource{}.DeleteScramble)
+        r.Put("/", user.UsersResource{}.EditScramble)
     })
 
 	http.ListenAndServe("localhost:8080", r)

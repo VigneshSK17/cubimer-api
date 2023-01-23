@@ -19,13 +19,20 @@ type NewScramble struct {
     Time int64
 }
 
+type GetScramble struct {
+    UserId int64
+    Username string
+    Password string
+    ScrambleId int64 `json:"scrambleId"`
+}
+
 type ModifyScramble struct {
     UserId int64 `json:"userId"`
     Username string
     Password string
     ScrambleId int64 `json:"scrambleId"`
-    ScrambleStr *string `json:"scrambleStr"`
-    Time *int64
+    ScrambleStr string `json:"scrambleStr"`
+    Time int64
 }
 
 func (u *NewScramble) Bind(r *http.Request) error {
@@ -60,7 +67,6 @@ func (u User) CreateScramblesTable() error {
 	tableName := u.GetTableName()
 
 	if _, err := db.DB.Exec(queryStr, tableName); err != nil {
-		// return errors.New("A table for the user given could not be created");
 		return err
 	}
 
@@ -80,13 +86,35 @@ func (u User) GetAllScrambles() ([]Scramble, error) {
 	defer db.DB.Close()
 
     if err := db.DB.Select(&scrambles, queryStr); err != nil {
-        // return nil, errors.New("Could not access scrambles for the user.")
-        return nil, err
+        return nil, errors.New("Could not access scrambles for the user.")
     }
 
     return scrambles, nil
 
 }
+
+func (s GetScramble) GetScrambleFromId() (*Scramble, error) {
+    
+    userTable := User{
+        Id: s.UserId,
+        Username: s.Username,
+        Password: s.Password,
+    }.GetTableName()
+
+    queryStr := fmt.Sprintf(`SELECT * FROM %s WHERE id = ?;`, userTable)
+
+	// TODO: Fix connecting to db
+	db.ConnectScrambleDB()
+	defer db.DB.Close()
+
+    var scramble Scramble
+    if err := db.DB.Get(&scramble, queryStr, s.ScrambleId); err != nil {
+        return nil, errors.New("Could not access scramble of given id from user.")
+    }
+
+    return &scramble, nil
+}
+
 
 func (s *NewScramble) InsertScramble() (Scramble, error) {
 
@@ -149,3 +177,38 @@ func (s ModifyScramble) DeleteScramble() error {
 
     return nil
 }
+
+func (s ModifyScramble) ModifyScramble() (*Scramble, error) {
+
+    userTable := User{
+        Id: s.UserId,
+        Username: s.Username,
+        Password: s.Password,
+    }.GetTableName()
+
+    now := time.Now()
+
+    queryStr := fmt.Sprintf(`
+        UPDATE %s
+        SET scrambleStr = ?, time = ?, updatedAt = ?
+        WHERE id = ?;
+    `, userTable)
+
+    // TODO: Fix connecting to db
+    db.ConnectScrambleDB()
+
+    if _, err := db.DB.Exec(queryStr, s.ScrambleStr, s.Time, now, s.ScrambleId); err != nil {
+        return nil, errors.New("Could not modify scramble with given information.")
+    }
+
+    // TODO: Fix connecting to db
+    db.DB.Close()
+
+    return GetScramble{
+        UserId: s.UserId,
+        Username: s.Username,
+        Password: s.Password,
+        ScrambleId: s.ScrambleId,
+    }.GetScrambleFromId()
+}
+
