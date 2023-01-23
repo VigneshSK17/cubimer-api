@@ -143,3 +143,22 @@ func (rs UsersResource) SaveScramble(w http.ResponseWriter, r *http.Request) {
     render.JSON(w, r, scramble)
 
 }
+
+func (rs UsersResource) DeleteScramble(w http.ResponseWriter, r *http.Request) {
+    
+    var scramble ModifyScramble
+
+    if err := json.NewDecoder(r.Body).Decode(&scramble); err != nil {
+        render.Render(w, r, ErrInvalidRequest(err))
+        return
+    }
+
+    if err := scramble.DeleteScramble(); err != nil {
+        render.Render(w, r, ErrRender(err))
+        return
+    }
+
+    render.Status(r, http.StatusNoContent)
+    render.JSON(w, r, scramble)
+
+}

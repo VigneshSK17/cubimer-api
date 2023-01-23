@@ -19,7 +19,20 @@ type NewScramble struct {
     Time int64
 }
 
+type ModifyScramble struct {
+    UserId int64 `json:"userId"`
+    Username string
+    Password string
+    ScrambleId int64 `json:"scrambleId"`
+    ScrambleStr *string `json:"scrambleStr"`
+    Time *int64
+}
+
 func (u *NewScramble) Bind(r *http.Request) error {
+	return nil
+}
+
+func (u *ModifyScramble) Bind(r *http.Request) error {
 	return nil
 }
 
@@ -114,4 +127,25 @@ func (s *NewScramble) InsertScramble() (Scramble, error) {
     }
 
     return scramble, nil
+}
+
+func (s ModifyScramble) DeleteScramble() error {
+
+    userTable := User{
+        Id: s.UserId,
+        Username: s.Username,
+        Password: s.Password,
+    }.GetTableName()
+
+    queryStr := fmt.Sprintf(`DELETE FROM %s WHERE id=?;`, userTable)
+
+    // TODO: Fix connecting to db
+    db.ConnectScrambleDB()
+    defer db.DB.Close()
+
+    if _, err := db.DB.Exec(queryStr, s.ScrambleId); err != nil {
+        return errors.New("Scramble could not be deleted")
+    }
+
+    return nil
 }
