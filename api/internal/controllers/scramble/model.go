@@ -22,3 +22,10 @@ type Scramble struct {
 func (s *Scramble) Bind(r *http.Request) error {
     return nil
 }
+
+// TODO: Get this to scrape website for scrambles
+// TODO: Get image from scrambling site
+// https://www.worldcubeassociation.org/regulations/history/files/scrambles/scramble_cube.htm
+func GenScramble() {
+
+}
