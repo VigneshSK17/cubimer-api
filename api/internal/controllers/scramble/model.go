@@ -12,6 +12,10 @@ const (
     ThreeByThree CubeType = "3x3" 
 )
 
+func (c CubeType) String() string {
+    return string(c)
+}
+
 type Scramble struct {
     Id int64
     Cube CubeType
