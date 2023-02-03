@@ -35,7 +35,7 @@ func (u *User) InsertNewUser() error {
     `
 
 	// TODO: Fix connecting to db
-	db.ConnectDB()
+	db.ConnectUserDB()
 	defer db.DB.Close()
 
 	result, err := db.DB.Exec(query, u.Username, u.Password, u.Username)
@@ -60,7 +60,7 @@ func (u User) GetAllUsers() ([]User, error) {
 	users := []User{}
 
 	// TODO: Fix connecting to db
-	db.ConnectDB()
+	db.ConnectUserDB()
 	defer db.DB.Close()
 
 	if err := db.DB.Select(&users, query); err != nil {
@@ -79,7 +79,7 @@ func (u User) DeleteUser() error {
     `
 
 	// TODO: Fix connecting to db
-	db.ConnectDB()
+	db.ConnectUserDB()
 	defer db.DB.Close()
 
 	if _, err := db.DB.Exec(query, u.Id, u.Username, u.Password); err != nil {
@@ -97,7 +97,7 @@ func (u User) EditUser() error {
     `
 
 	// TODO: Fix connecting to db
-	db.ConnectDB()
+	db.ConnectUserDB()
 	defer db.DB.Close()
 
 	if _, err := db.DB.Exec(query, u.Username, u.Password, u.Id); err != nil {
@@ -115,13 +115,13 @@ func (u *User) CheckUser() error {
 		);
     `
 
-    var userId int64
+	var userId int64
 
 	// TODO: Fix connecting to db
-	db.ConnectDB()
+	db.ConnectUserDB()
 	defer db.DB.Close()
 
-    row := db.DB.QueryRow(query, u.Username, u.Password)
+	row := db.DB.QueryRow(query, u.Username, u.Password)
 
 	if err := row.Scan(&userId); err != nil {
 		return errors.New("Could not find user with given username and password.")

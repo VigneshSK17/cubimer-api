@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	"github.com/VigneshSK17/cubimer-api/api/internal/controllers/scramble"
 	"github.com/VigneshSK17/cubimer-api/api/internal/controllers/user"
 
 	"github.com/go-chi/chi/v5"
@@ -32,7 +33,20 @@ func main() {
 		r.Put("/", user.UsersResource{}.Update)
 
 		r.Get("/", user.UsersResource{}.Login)
+
 	})
+
+    /** Scrambles routes **/
+
+    r.Route("/scrambles", func(r chi.Router) {
+        r.Get("/", user.UsersResource{}.ListScrambles)
+        r.Post("/", user.UsersResource{}.SaveScramble)
+        r.Delete("/", user.UsersResource{}.DeleteScramble)
+        r.Put("/", user.UsersResource{}.EditScramble)
+
+        r.Get("/{cubeType}", scramble.ScramblesResource{}.GetScramble)
+    })
+
 
 	http.ListenAndServe("localhost:8080", r)
 

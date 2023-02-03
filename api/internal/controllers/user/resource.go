@@ -5,69 +5,11 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+
+	. "github.com/VigneshSK17/cubimer-api/api/internal/renderers"
 )
 
-// TODO: Put these renderers somewhere else
-// -----------------
-
-type ErrResponse struct {
-	Err            error `json:"-"` // low-level runtime error
-	HTTPStatusCode int   `json:"-"` // http response status code
-
-	StatusText string `json:"status"`          // user-level status message
-	AppCode    int64  `json:"code,omitempty"`  // application-specific error code
-	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
-}
-
-func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	render.Status(r, e.HTTPStatusCode)
-	return nil
-}
-
-func ErrInvalidRequest(err error) render.Renderer {
-	return &ErrResponse{
-		Err:            err,
-		HTTPStatusCode: 400,
-		StatusText:     "Invalid request.",
-		ErrorText:      err.Error(),
-	}
-}
-
-func ErrRender(err error) render.Renderer {
-	return &ErrResponse{
-		Err:            err,
-		HTTPStatusCode: 422,
-		StatusText:     "Error rendering response.",
-		ErrorText:      err.Error(),
-	}
-}
-
-// -----------------
-
 type UsersResource struct{}
-
-// func (rs UsersResource) Routes() chi.Router {
-//     r := chi.NewRouter()
-//     r.Use(UserCtx) // TODO: Make this open DB
-//
-//     r.Get("/", rs.List) // TODO: Restrict this to admin only
-//     r.Post("/", rs.Create)
-//
-//     r.Route("/{username}", func(r chi.Router) {
-//         r.Get("/", rs.Login) // Return user ID to access scrambles
-//         r.Put("/", rs.Update)
-//         r.Delete("/", rs.Delete)
-//     })
-//
-//     return r
-// }
-
-func UserCtx(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-	})
-}
-
 func (rs UsersResource) List(w http.ResponseWriter, r *http.Request) {
 
 	testUser := User{}
@@ -96,6 +38,11 @@ func (rs UsersResource) Create(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, ErrRender(err))
 		return
 	}
+
+    if err := newUser.CreateScramblesTable(); err != nil {
+		render.Render(w, r, ErrRender(err))
+		return
+    }
 
 	render.Status(r, http.StatusCreated)
 	render.JSON(w, r, newUser)
@@ -154,5 +101,84 @@ func (rs UsersResource) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusNoContent)
+
+}
+
+func (rs UsersResource) ListScrambles(w http.ResponseWriter, r *http.Request) {
+
+    var user User
+
+    if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+        render.Render(w, r, ErrInvalidRequest(err))
+        return
+    }
+
+    scrambles, err := user.GetAllScrambles()
+    if err != nil {
+        render.Render(w, r, ErrRender(err))
+        return
+    }
+
+    render.Status(r, http.StatusCreated)    
+    render.JSON(w, r, scrambles)
+
+}
+
+func (rs UsersResource) SaveScramble(w http.ResponseWriter, r *http.Request) {
+
+    var newScramble NewScramble
+
+    if err := json.NewDecoder(r.Body).Decode(&newScramble); err != nil {
+        render.Render(w, r, ErrInvalidRequest(err))
+        return
+    }
+
+    scramble, err := newScramble.InsertScramble()
+    if err != nil {
+        render.Render(w, r, ErrRender(err))
+        return
+    }
+
+    render.Status(r, http.StatusCreated)
+    render.JSON(w, r, scramble)
+
+}
+
+func (rs UsersResource) DeleteScramble(w http.ResponseWriter, r *http.Request) {
+    
+    var scramble ModifyScramble
+
+    if err := json.NewDecoder(r.Body).Decode(&scramble); err != nil {
+        render.Render(w, r, ErrInvalidRequest(err))
+        return
+    }
+
+    if err := scramble.DeleteScramble(); err != nil {
+        render.Render(w, r, ErrRender(err))
+        return
+    }
+
+    render.Status(r, http.StatusNoContent)
+    render.JSON(w, r, scramble)
+
+}
+
+func (rs UsersResource) EditScramble(w http.ResponseWriter, r *http.Request) {
+
+    var scramble ModifyScramble
+
+    if err := json.NewDecoder(r.Body).Decode(&scramble); err != nil {
+        render.Render(w, r, ErrInvalidRequest(err))
+        return
+    }
+
+    modifiedScramble, err := scramble.ModifyScramble()
+    if err != nil {
+        render.Render(w, r, ErrRender(err))
+        return
+    }
+
+    render.Status(r, http.StatusNoContent)
+    render.JSON(w, r, *modifiedScramble)
 
 }
