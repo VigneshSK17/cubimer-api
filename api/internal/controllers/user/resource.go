@@ -140,7 +140,7 @@ func (rs UsersResource) SaveScramble(w http.ResponseWriter, r *http.Request) {
     }
 
     render.Status(r, http.StatusCreated)
-    render.JSON(w, r, scramble)
+    render.JSON(w, r, *scramble)
 
 }
 

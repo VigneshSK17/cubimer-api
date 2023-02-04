@@ -60,13 +60,15 @@ func (u User) CreateScramblesTable() error {
 	        updatedAt datetime NOT NULL
         );`, u.GetTableName())
 
-	// TODO: Fix connecting to db
-	db.ConnectScrambleDB()
-	defer db.DB.Close()
+    scrambleDb, err := db.ConnectDB(1)
+    if err != nil {
+        return err
+    }
+    defer scrambleDb.Close()
 
 	tableName := u.GetTableName()
 
-	if _, err := db.DB.Exec(queryStr, tableName); err != nil {
+	if _, err := scrambleDb.Exec(queryStr, tableName); err != nil {
 		return err
 	}
 
@@ -81,11 +83,13 @@ func (u User) GetAllScrambles() ([]Scramble, error) {
         SELECT * FROM %s ORDER BY id DESC;
     `, u.GetTableName())
 
-	// TODO: Fix connecting to db
-	db.ConnectScrambleDB()
-	defer db.DB.Close()
+    scrambleDb, err := db.ConnectDB(1)
+    if err != nil {
+        return nil, err
+    }
+    defer scrambleDb.Close()
 
-    if err := db.DB.Select(&scrambles, queryStr); err != nil {
+    if err := scrambleDb.Select(&scrambles, queryStr); err != nil {
         return nil, errors.New("Could not access scrambles for the user.")
     }
 
@@ -103,12 +107,14 @@ func (s GetScramble) GetScrambleFromId() (*Scramble, error) {
 
     queryStr := fmt.Sprintf(`SELECT * FROM %s WHERE id = ?;`, userTable)
 
-	// TODO: Fix connecting to db
-	db.ConnectScrambleDB()
-	defer db.DB.Close()
+    scrambleDb, err := db.ConnectDB(1)
+    if err != nil {
+        return nil, err
+    }
+    defer scrambleDb.Close()
 
     var scramble Scramble
-    if err := db.DB.Get(&scramble, queryStr, s.ScrambleId); err != nil {
+    if err := scrambleDb.Get(&scramble, queryStr, s.ScrambleId); err != nil {
         return nil, errors.New("Could not access scramble of given id from user.")
     }
 
@@ -116,7 +122,7 @@ func (s GetScramble) GetScrambleFromId() (*Scramble, error) {
 }
 
 
-func (s *NewScramble) InsertScramble() (Scramble, error) {
+func (s *NewScramble) InsertScramble() (*Scramble, error) {
 
     user := User{
         Id: s.Id,
@@ -129,20 +135,22 @@ func (s *NewScramble) InsertScramble() (Scramble, error) {
         VALUES (?, ?, ?, ?, ?);
     `, user.GetTableName())
 
-	// TODO: Fix connecting to db
-	db.ConnectScrambleDB()
-	defer db.DB.Close()
+    scrambleDb, err := db.ConnectDB(1)
+    if err != nil {
+        return nil, err
+    }
+    defer scrambleDb.Close()
 
     now := time.Now()
 
-	result, err := db.DB.Exec(query, s.Cube, s.ScrambleStr, s.Time, now, now)
+	result, err := scrambleDb.Exec(query, s.Cube, s.ScrambleStr, s.Time, now, now)
 	if err != nil {
-		return Scramble{}, errors.New("Could not create new scramble.")
+		return nil, errors.New("Could not create new scramble.")
 	}
 
 	var newId int64
 	if newId, err = result.LastInsertId(); err != nil {
-		return Scramble{}, errors.New("Count not find the newest scramble created. Please try again.")
+		return nil, errors.New("Count not find the newest scramble created. Please try again.")
 	}
 
     scramble := Scramble{
@@ -154,7 +162,7 @@ func (s *NewScramble) InsertScramble() (Scramble, error) {
         UpdatedAt: now,
     }
 
-    return scramble, nil
+    return &scramble, nil
 }
 
 func (s ModifyScramble) DeleteScramble() error {
@@ -167,11 +175,13 @@ func (s ModifyScramble) DeleteScramble() error {
 
     queryStr := fmt.Sprintf(`DELETE FROM %s WHERE id=?;`, userTable)
 
-    // TODO: Fix connecting to db
-    db.ConnectScrambleDB()
-    defer db.DB.Close()
+    scrambleDb, err := db.ConnectDB(1)
+    if err != nil {
+        return err
+    }
+    defer scrambleDb.Close()
 
-    if _, err := db.DB.Exec(queryStr, s.ScrambleId); err != nil {
+    if _, err := scrambleDb.Exec(queryStr, s.ScrambleId); err != nil {
         return errors.New("Scramble could not be deleted")
     }
 
@@ -194,15 +204,15 @@ func (s ModifyScramble) ModifyScramble() (*Scramble, error) {
         WHERE id = ?;
     `, userTable)
 
-    // TODO: Fix connecting to db
-    db.ConnectScrambleDB()
+    scrambleDb, err := db.ConnectDB(1)
+    if err != nil {
+        return nil, err
+    }
+    defer scrambleDb.Close()
 
-    if _, err := db.DB.Exec(queryStr, s.ScrambleStr, s.Time, now, s.ScrambleId); err != nil {
+    if _, err := scrambleDb.Exec(queryStr, s.ScrambleStr, s.Time, now, s.ScrambleId); err != nil {
         return nil, errors.New("Could not modify scramble with given information.")
     }
-
-    // TODO: Fix connecting to db
-    db.DB.Close()
 
     return GetScramble{
         UserId: s.UserId,

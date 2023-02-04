@@ -34,11 +34,13 @@ func (u *User) InsertNewUser() error {
         VALUES (?, ?);
     `
 
-	// TODO: Fix connecting to db
-	db.ConnectUserDB()
-	defer db.DB.Close()
+    userDb, err := db.ConnectDB(0)
+    if err != nil {
+        return err
+    }
+    defer userDb.Close()
 
-	result, err := db.DB.Exec(query, u.Username, u.Password, u.Username)
+	result, err := userDb.Exec(query, u.Username, u.Password, u.Username)
 	if err != nil {
 		return errors.New("Could not create new user.")
 	}
@@ -59,11 +61,13 @@ func (u User) GetAllUsers() ([]User, error) {
     `
 	users := []User{}
 
-	// TODO: Fix connecting to db
-	db.ConnectUserDB()
-	defer db.DB.Close()
+    userDb, err := db.ConnectDB(0)
+    if err != nil {
+        return nil, err
+    }
+    defer userDb.Close()
 
-	if err := db.DB.Select(&users, query); err != nil {
+	if err := userDb.Select(&users, query); err != nil {
 		return nil, errors.New("Could not access users.")
 	}
 
@@ -78,11 +82,13 @@ func (u User) DeleteUser() error {
             AND password=?;
     `
 
-	// TODO: Fix connecting to db
-	db.ConnectUserDB()
-	defer db.DB.Close()
+    userDb, err := db.ConnectDB(0)
+    if err != nil {
+        return err
+    }
+    defer userDb.Close()
 
-	if _, err := db.DB.Exec(query, u.Id, u.Username, u.Password); err != nil {
+	if _, err := userDb.Exec(query, u.Id, u.Username, u.Password); err != nil {
 		return errors.New("User to be deleted not found.")
 	}
 
@@ -96,11 +102,13 @@ func (u User) EditUser() error {
         WHERE id = ?;
     `
 
-	// TODO: Fix connecting to db
-	db.ConnectUserDB()
-	defer db.DB.Close()
+    userDb, err := db.ConnectDB(0)
+    if err != nil {
+        return err
+    }
+    defer userDb.Close()
 
-	if _, err := db.DB.Exec(query, u.Username, u.Password, u.Id); err != nil {
+	if _, err := userDb.Exec(query, u.Username, u.Password, u.Id); err != nil {
 		return errors.New("User to be edited not found.")
 	}
 
@@ -117,11 +125,13 @@ func (u *User) CheckUser() error {
 
 	var userId int64
 
-	// TODO: Fix connecting to db
-	db.ConnectUserDB()
-	defer db.DB.Close()
+    userDb, err := db.ConnectDB(0)
+    if err != nil {
+        return err
+    }
+    defer userDb.Close()
 
-	row := db.DB.QueryRow(query, u.Username, u.Password)
+	row := userDb.QueryRow(query, u.Username, u.Password)
 
 	if err := row.Scan(&userId); err != nil {
 		return errors.New("Could not find user with given username and password.")
