@@ -5,6 +5,7 @@ import (
 
 	"github.com/VigneshSK17/cubimer-api/api/internal/controllers/scramble"
 	"github.com/VigneshSK17/cubimer-api/api/internal/controllers/user"
+	"github.com/VigneshSK17/cubimer-api/db"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -18,6 +19,8 @@ func main() {
 
 	r.Use(middleware.Logger)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
+
+    db.ConnectDB()
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		test_resp := map[string]string{"name": "Cubimer API"}
@@ -48,6 +51,6 @@ func main() {
     })
 
 
-	http.ListenAndServe("localhost:8080", r)
+	http.ListenAndServe(":3000", r)
 
 }

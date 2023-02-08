@@ -7,7 +7,7 @@ import (
 	"time"
 
 	. "github.com/VigneshSK17/cubimer-api/api/internal/controllers/scramble"
-	"github.com/VigneshSK17/cubimer-api/db"
+	. "github.com/VigneshSK17/cubimer-api/db"
 )
 
 type NewScramble struct {
@@ -60,15 +60,9 @@ func (u User) CreateScramblesTable() error {
 	        updatedAt datetime NOT NULL
         );`, u.GetTableName())
 
-    scrambleDb, err := db.ConnectDB(1)
-    if err != nil {
-        return err
-    }
-    defer scrambleDb.Close()
-
 	tableName := u.GetTableName()
 
-	if _, err := scrambleDb.Exec(queryStr, tableName); err != nil {
+	if _, err := DB.Db.Exec(queryStr, tableName); err != nil {
 		return err
 	}
 
@@ -83,13 +77,7 @@ func (u User) GetAllScrambles() ([]Scramble, error) {
         SELECT * FROM %s ORDER BY id DESC;
     `, u.GetTableName())
 
-    scrambleDb, err := db.ConnectDB(1)
-    if err != nil {
-        return nil, err
-    }
-    defer scrambleDb.Close()
-
-    if err := scrambleDb.Select(&scrambles, queryStr); err != nil {
+    if err := DB.Db.Select(&scrambles, queryStr); err != nil {
         return nil, errors.New("Could not access scrambles for the user.")
     }
 
@@ -107,14 +95,8 @@ func (s GetScramble) GetScrambleFromId() (*Scramble, error) {
 
     queryStr := fmt.Sprintf(`SELECT * FROM %s WHERE id = ?;`, userTable)
 
-    scrambleDb, err := db.ConnectDB(1)
-    if err != nil {
-        return nil, err
-    }
-    defer scrambleDb.Close()
-
     var scramble Scramble
-    if err := scrambleDb.Get(&scramble, queryStr, s.ScrambleId); err != nil {
+    if err := DB.Db.Get(&scramble, queryStr, s.ScrambleId); err != nil {
         return nil, errors.New("Could not access scramble of given id from user.")
     }
 
@@ -135,15 +117,9 @@ func (s *NewScramble) InsertScramble() (*Scramble, error) {
         VALUES (?, ?, ?, ?, ?);
     `, user.GetTableName())
 
-    scrambleDb, err := db.ConnectDB(1)
-    if err != nil {
-        return nil, err
-    }
-    defer scrambleDb.Close()
-
     now := time.Now()
 
-	result, err := scrambleDb.Exec(query, s.Cube, s.ScrambleStr, s.Time, now, now)
+	result, err := DB.Db.Exec(query, s.Cube, s.ScrambleStr, s.Time, now, now)
 	if err != nil {
 		return nil, errors.New("Could not create new scramble.")
 	}
@@ -175,13 +151,7 @@ func (s ModifyScramble) DeleteScramble() error {
 
     queryStr := fmt.Sprintf(`DELETE FROM %s WHERE id=?;`, userTable)
 
-    scrambleDb, err := db.ConnectDB(1)
-    if err != nil {
-        return err
-    }
-    defer scrambleDb.Close()
-
-    if _, err := scrambleDb.Exec(queryStr, s.ScrambleId); err != nil {
+    if _, err := DB.Db.Exec(queryStr, s.ScrambleId); err != nil {
         return errors.New("Scramble could not be deleted")
     }
 
@@ -204,13 +174,7 @@ func (s ModifyScramble) ModifyScramble() (*Scramble, error) {
         WHERE id = ?;
     `, userTable)
 
-    scrambleDb, err := db.ConnectDB(1)
-    if err != nil {
-        return nil, err
-    }
-    defer scrambleDb.Close()
-
-    if _, err := scrambleDb.Exec(queryStr, s.ScrambleStr, s.Time, now, s.ScrambleId); err != nil {
+    if _, err := DB.Db.Exec(queryStr, s.ScrambleStr, s.Time, now, s.ScrambleId); err != nil {
         return nil, errors.New("Could not modify scramble with given information.")
     }
 

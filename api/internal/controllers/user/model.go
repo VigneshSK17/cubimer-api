@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/VigneshSK17/cubimer-api/db"
+	. "github.com/VigneshSK17/cubimer-api/db"
 )
 
 // TODO: Create custom error type
@@ -34,13 +34,7 @@ func (u *User) InsertNewUser() error {
         VALUES (?, ?);
     `
 
-    userDb, err := db.ConnectDB(0)
-    if err != nil {
-        return err
-    }
-    defer userDb.Close()
-
-	result, err := userDb.Exec(query, u.Username, u.Password, u.Username)
+	result, err := DB.Db.Exec(query, u.Username, u.Password, u.Username)
 	if err != nil {
 		return errors.New("Could not create new user.")
 	}
@@ -61,13 +55,7 @@ func (u User) GetAllUsers() ([]User, error) {
     `
 	users := []User{}
 
-    userDb, err := db.ConnectDB(0)
-    if err != nil {
-        return nil, err
-    }
-    defer userDb.Close()
-
-	if err := userDb.Select(&users, query); err != nil {
+	if err := DB.Db.Select(&users, query); err != nil {
 		return nil, errors.New("Could not access users.")
 	}
 
@@ -82,13 +70,7 @@ func (u User) DeleteUser() error {
             AND password=?;
     `
 
-    userDb, err := db.ConnectDB(0)
-    if err != nil {
-        return err
-    }
-    defer userDb.Close()
-
-	if _, err := userDb.Exec(query, u.Id, u.Username, u.Password); err != nil {
+	if _, err := DB.Db.Exec(query, u.Id, u.Username, u.Password); err != nil {
 		return errors.New("User to be deleted not found.")
 	}
 
@@ -102,13 +84,7 @@ func (u User) EditUser() error {
         WHERE id = ?;
     `
 
-    userDb, err := db.ConnectDB(0)
-    if err != nil {
-        return err
-    }
-    defer userDb.Close()
-
-	if _, err := userDb.Exec(query, u.Username, u.Password, u.Id); err != nil {
+	if _, err := DB.Db.Exec(query, u.Username, u.Password, u.Id); err != nil {
 		return errors.New("User to be edited not found.")
 	}
 
@@ -125,13 +101,7 @@ func (u *User) CheckUser() error {
 
 	var userId int64
 
-    userDb, err := db.ConnectDB(0)
-    if err != nil {
-        return err
-    }
-    defer userDb.Close()
-
-	row := userDb.QueryRow(query, u.Username, u.Password)
+	row := DB.Db.QueryRow(query, u.Username, u.Password)
 
 	if err := row.Scan(&userId); err != nil {
 		return errors.New("Could not find user with given username and password.")
