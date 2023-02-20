@@ -9,7 +9,7 @@ services:
       - 3000:3000
     volumes:
       - .:/usr/src/app
-    command: bash -c "cd api/ && air . -b 0.0.0.0"
+    command: bash -c "cd api/ && air . -b 0.0.0.0 && migrate -database ${DB_SOURCE_NAME} -path db/migrations up"
 
   db:
     image: postgres:alpine

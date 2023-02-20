@@ -17,7 +17,8 @@ func (c CubeType) String() string {
 }
 
 type Scramble struct {
-    Id int64
+    ScrambleId int64
+    UserId int64
     Cube CubeType
     ScrambleStr string `db:"scrambleStr"`
     Time int64 // milliseconds

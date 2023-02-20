@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
-	_ "github.com/mattn/go-sqlite3"
+    _ "github.com/lib/pq"
 )
 
 func main() {
@@ -29,11 +29,12 @@ func main() {
 
 	/** Users routes **/
 
+    // TODO: Fix commented routes sqlx
 	r.Route("/users", func(r chi.Router) {
 		r.Post("/", user.UsersResource{}.Create)
 		r.Patch("/", user.UsersResource{}.List)
-		r.Delete("/", user.UsersResource{}.Delete)
-		r.Put("/", user.UsersResource{}.Update)
+		// r.Delete("/", user.UsersResource{}.Delete)
+		// r.Put("/", user.UsersResource{}.Update)
 
 		r.Get("/", user.UsersResource{}.Login)
 

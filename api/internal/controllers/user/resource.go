@@ -39,11 +39,6 @@ func (rs UsersResource) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    if err := newUser.CreateScramblesTable(); err != nil {
-		render.Render(w, r, ErrRender(err))
-		return
-    }
-
 	render.Status(r, http.StatusCreated)
 	render.JSON(w, r, newUser)
 

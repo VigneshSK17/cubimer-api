@@ -9,17 +9,8 @@ import (
 
 // TODO: Create custom error type
 
-// TODO: Modify ID to be more secure and UUID
-const CreateQuery string = `
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL,
-        password TEXT NOT NULL
-    );
-`
-
 type User struct {
-	Id       int64
+	UserId   int64
 	Username string
 	Password string
 }
@@ -29,29 +20,22 @@ func (u *User) Bind(r *http.Request) error {
 }
 
 func (u *User) InsertNewUser() error {
-	const query string = `
-        INSERT INTO users (username, password)
-        VALUES (?, ?);
-    `
 
-	result, err := DB.Db.Exec(query, u.Username, u.Password, u.Username)
-	if err != nil {
+	const query string = "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING userId;"
+	var newId int
+
+	if err := DB.Db.QueryRowx(query, u.Username, u.Password).Scan(&newId); err != nil {
 		return errors.New("Could not create new user.")
 	}
 
-	var newId int64
-	if newId, err = result.LastInsertId(); err != nil {
-		return errors.New("Count not find the newest user created. Please try again.")
-	}
-
-	u.Id = newId
+	u.UserId = int64(newId)
 
 	return nil
 }
 
 func (u User) GetAllUsers() ([]User, error) {
 	const query string = `
-        SELECT * FROM users ORDER BY id ASC;
+        SELECT * FROM users ORDER BY userId ASC;
     `
 	users := []User{}
 
@@ -62,16 +46,13 @@ func (u User) GetAllUsers() ([]User, error) {
 	return users, nil
 }
 
-func (u User) DeleteUser() error {
-	const query string = `
-        DELETE FROM users WHERE 
-            id=?
-            AND username=?
-            AND password=?;
-    `
+// TODO: Fix this
+func (u *User) DeleteUser() error {
+	query := `DELETE FROM users WHERE userId=$1`
 
-	if _, err := DB.Db.Exec(query, u.Id, u.Username, u.Password); err != nil {
-		return errors.New("User to be deleted not found.")
+	if _, err := DB.Db.Exec(query, u.UserId); err != nil {
+		// return errors.New("User to be deleted not found.")
+		return err
 	}
 
 	return nil
@@ -79,13 +60,16 @@ func (u User) DeleteUser() error {
 
 func (u User) EditUser() error {
 	const query string = `
-        UPDATE users
-        SET username = ?, password = ?
-        WHERE id = ?;
+        UPDATE users 
+        SET username = :username, password = :password
+        WHERE userId = :userid;
     `
+    // var editedUser User
 
-	if _, err := DB.Db.Exec(query, u.Username, u.Password, u.Id); err != nil {
-		return errors.New("User to be edited not found.")
+	// if err := DB.Db.Get(&editedUser, query, u.Username, u.Password, u.UserId); err != nil {
+	if _, err := DB.Db.NamedExec(query, u); err != nil {
+		// return errors.New("User to be edited not found.")
+		return err
 	}
 
 	return nil
@@ -94,19 +78,17 @@ func (u User) EditUser() error {
 // TODO: Store the passwords and such in a secure way
 func (u *User) CheckUser() error {
 	const query string = `
-        SELECT id FROM users WHERE (
-            username = ? AND password = ?
+        SELECT userId FROM users WHERE (
+            username = $1 AND password = $2
 		);
     `
 
 	var userId int64
 
-	row := DB.Db.QueryRow(query, u.Username, u.Password)
-
-	if err := row.Scan(&userId); err != nil {
+	if err := DB.Db.QueryRowx(query, u.Username, u.Password).Scan(&userId); err != nil {
 		return errors.New("Could not find user with given username and password.")
 	}
 
-	u.Id = userId
+	u.UserId = int64(userId)
 	return nil
 }
