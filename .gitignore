@@ -51,3 +51,4 @@ Vagrantfile
 
 # Test databases
 db/*.db
+.env
