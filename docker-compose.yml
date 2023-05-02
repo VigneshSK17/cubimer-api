@@ -7,4 +7,4 @@ services:
       - "8080:8080"
     volumes:
       - .:/usr/src/app
-    command: go run src/main.go -b 0.0.0.0
+    command: air ./src/main.go -b 0.0.0.0
