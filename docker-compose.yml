@@ -3,8 +3,48 @@ version: '3.8'
 services:
   web:
     build: .
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     volumes:
       - .:/usr/src/app
     command: air ./src/main.go -b 0.0.0.0
+
+  db:
+    image: postgres:alpine
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-db:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U ${DB_USER} -d ${DB_NAME}
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # migrate:
+  #   image: migrate/migrate
+  #   volumes:
+  #     - ./db/migrations:/db/migrations
+  #   command: ["-path", "db/migrations", "-database", "postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable", "-verbose", "up"]
+  #   depends_on:
+  #     - bdb
+
+  # dbmate:
+  #   image: amacneil/dbmate
+  #   volumes:
+  #     - ./db/migrations:/db/migrations
+  #   environment:
+  #     DATABASE_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable"
+  #   command: ["dbmate", "up"]
+  #   depends_on:
+  #     - db
+
+
+volumes:
+  postgres-db:
