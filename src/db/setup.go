@@ -18,6 +18,7 @@ type DB struct {
 	Queries *Queries
 }
 
+var Instance DB
 
 func Get() (DB, error) {
 
@@ -39,7 +40,7 @@ func Get() (DB, error) {
 	if err != nil {
 		return q, err
 	}
-	
+
 	m, err := migrate.NewWithDatabaseInstance(
 		"file:///usr/src/app/db/migrations",
 		os.Getenv("DB_NAME"), driver)

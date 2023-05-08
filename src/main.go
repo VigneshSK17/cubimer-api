@@ -1,8 +1,7 @@
 package main
 
 import (
-	"context"
-	"fmt"
+	"github.com/VigneshSK17/cubimer-api/src/user"
 	"log"
 	"net/http"
 	"time"
@@ -20,6 +19,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not set up database: %v", err)
 	}
+	db.Instance = queries
 
 	r := chi.NewRouter()
 
@@ -30,25 +30,22 @@ func main() {
 
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Cubimer API"))
-	})
+	r.Route("/api", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("Cubimer API"))
+		})
 
-	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Move to top
-		if err != nil {
-			fmt.Println(err.Error())
-			w.Write([]byte("Could not access db"))
-		} else {
-			_, err := queries.Queries.ListUsers(context.Background())
-			if err != nil {
-				fmt.Println(err.Error())
-				w.Write([]byte("Could not access users"))
-			} else {
-				w.Write([]byte("Can access users"))
-				// w.Write([]byte{byte(len(users))})
-			}
-		}
+		r.Post("/token", user.GenerateToken)
+
+		r.Post("/user", user.RegisterUser)
+
+		r.Route("/secured", func(r chi.Router) {
+			r.Use(user.Auth)
+
+			r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+				w.Write([]byte("pong"))
+			})
+		})
 	})
 
 	http.ListenAndServe(":8080", r)
