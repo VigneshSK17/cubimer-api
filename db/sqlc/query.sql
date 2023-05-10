@@ -10,3 +10,17 @@ ORDER BY username;
 INSERT INTO users (username, password)
 VALUES ($1, $2)
 RETURNING *;
+
+
+-- name: CreateScramble :one
+INSERT INTO scrambles (user_id, time, scramble)
+VALUES ($1, $2, $3)
+RETURNING *;
+
+-- name: GetScrambles :many
+SELECT * FROM scrambles
+ORDER BY id;
+
+-- name: GetScramblesByUser :many
+SELECT * FROM scrambles
+WHERE user_id = $1;

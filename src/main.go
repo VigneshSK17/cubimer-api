@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/VigneshSK17/cubimer-api/src/scramble"
 	"github.com/VigneshSK17/cubimer-api/src/user"
 	"log"
 	"net/http"
@@ -45,6 +46,15 @@ func main() {
 			r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 				w.Write([]byte("pong"))
 			})
+
+		})
+
+		r.Route("/scramble", func(r chi.Router) {
+			r.Use(user.Auth)
+
+			r.Get("/all", scramble.GetScramblesByUser)
+			r.Post("/", scramble.SaveScramble)
+
 		})
 	})
 

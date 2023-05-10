@@ -9,6 +9,32 @@ import (
 	"context"
 )
 
+const createScramble = `-- name: CreateScramble :one
+INSERT INTO scrambles (user_id, time, scramble)
+VALUES ($1, $2, $3)
+RETURNING id, user_id, time, scramble, created_on, updated_on
+`
+
+type CreateScrambleParams struct {
+	UserID   int64
+	Time     int32
+	Scramble string
+}
+
+func (q *Queries) CreateScramble(ctx context.Context, arg CreateScrambleParams) (Scramble, error) {
+	row := q.db.QueryRowContext(ctx, createScramble, arg.UserID, arg.Time, arg.Scramble)
+	var i Scramble
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Time,
+		&i.Scramble,
+		&i.CreatedOn,
+		&i.UpdatedOn,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (username, password)
 VALUES ($1, $2)
@@ -25,6 +51,76 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	var i User
 	err := row.Scan(&i.ID, &i.Username, &i.Password)
 	return i, err
+}
+
+const getScrambles = `-- name: GetScrambles :many
+SELECT id, user_id, time, scramble, created_on, updated_on FROM scrambles
+ORDER BY id
+`
+
+func (q *Queries) GetScrambles(ctx context.Context) ([]Scramble, error) {
+	rows, err := q.db.QueryContext(ctx, getScrambles)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Scramble
+	for rows.Next() {
+		var i Scramble
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Time,
+			&i.Scramble,
+			&i.CreatedOn,
+			&i.UpdatedOn,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getScramblesByUser = `-- name: GetScramblesByUser :many
+SELECT id, user_id, time, scramble, created_on, updated_on FROM scrambles
+WHERE user_id = $1
+`
+
+func (q *Queries) GetScramblesByUser(ctx context.Context, userID int64) ([]Scramble, error) {
+	rows, err := q.db.QueryContext(ctx, getScramblesByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Scramble
+	for rows.Next() {
+		var i Scramble
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Time,
+			&i.Scramble,
+			&i.CreatedOn,
+			&i.UpdatedOn,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one

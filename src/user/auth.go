@@ -47,11 +47,11 @@ func GenerateToken(w http.ResponseWriter, r *http.Request) {
 
 	user, err := Instance.Queries.GetUserByUsername(ctx, request.Username)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "no user with the given username found", http.StatusInternalServerError)
 		return
 	}
 	if err = checkPassword(user, request.Password); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "the password for the user is incorrect", http.StatusInternalServerError)
 		return
 	}
 

@@ -4,7 +4,18 @@
 
 package db
 
-import ()
+import (
+	"time"
+)
+
+type Scramble struct {
+	ID        int64
+	UserID    int64
+	Time      int32
+	Scramble  string
+	CreatedOn time.Time
+	UpdatedOn time.Time
+}
 
 type User struct {
 	ID       int64
