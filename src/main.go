@@ -54,6 +54,8 @@ func main() {
 
 			r.Get("/all", scramble.GetScramblesByUser)
 			r.Post("/", scramble.SaveScramble)
+			r.Put("/", scramble.UpdateScramble)
+			r.Delete("/", scramble.DeleteScramble)
 
 		})
 	})

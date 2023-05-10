@@ -23,4 +23,18 @@ ORDER BY id;
 
 -- name: GetScramblesByUser :many
 SELECT * FROM scrambles
-WHERE user_id = $1;
+WHERE user_id = $1
+ORDER BY id;
+
+-- name: UpdateScramble :one
+UPDATE scrambles
+SET time = $2,
+    scramble = $3,
+    updated_on = NOW()
+WHERE id = $1
+RETURNING *;
+
+-- name: DeleteScramble :one
+DELETE FROM scrambles
+WHERE id = $1
+RETURNING *;

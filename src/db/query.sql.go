@@ -53,6 +53,26 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteScramble = `-- name: DeleteScramble :one
+DELETE FROM scrambles
+WHERE id = $1
+RETURNING id, user_id, time, scramble, created_on, updated_on
+`
+
+func (q *Queries) DeleteScramble(ctx context.Context, id int64) (Scramble, error) {
+	row := q.db.QueryRowContext(ctx, deleteScramble, id)
+	var i Scramble
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Time,
+		&i.Scramble,
+		&i.CreatedOn,
+		&i.UpdatedOn,
+	)
+	return i, err
+}
+
 const getScrambles = `-- name: GetScrambles :many
 SELECT id, user_id, time, scramble, created_on, updated_on FROM scrambles
 ORDER BY id
@@ -91,6 +111,7 @@ func (q *Queries) GetScrambles(ctx context.Context) ([]Scramble, error) {
 const getScramblesByUser = `-- name: GetScramblesByUser :many
 SELECT id, user_id, time, scramble, created_on, updated_on FROM scrambles
 WHERE user_id = $1
+ORDER BY id
 `
 
 func (q *Queries) GetScramblesByUser(ctx context.Context, userID int64) ([]Scramble, error) {
@@ -161,4 +182,33 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateScramble = `-- name: UpdateScramble :one
+UPDATE scrambles
+SET time = $2,
+    scramble = $3,
+    updated_on = NOW()
+WHERE id = $1
+RETURNING id, user_id, time, scramble, created_on, updated_on
+`
+
+type UpdateScrambleParams struct {
+	ID       int64
+	Time     int32
+	Scramble string
+}
+
+func (q *Queries) UpdateScramble(ctx context.Context, arg UpdateScrambleParams) (Scramble, error) {
+	row := q.db.QueryRowContext(ctx, updateScramble, arg.ID, arg.Time, arg.Scramble)
+	var i Scramble
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Time,
+		&i.Scramble,
+		&i.CreatedOn,
+		&i.UpdatedOn,
+	)
+	return i, err
 }
